@@ -1,7 +1,7 @@
 from ftplib import FTP,error_perm
 import os
 import datetime
-from getpass import getpass
+#from getpass import getpass
 
 #Check and send
 def Files(ftp, path):
@@ -26,7 +26,8 @@ files=input("Folder or File Location:")
 try:
     ftp=FTP(input("What server:"))
     user=input("User:")
-    passw=getpass('password:')
+    #passw=getpass('password:')
+    passw=input("What Password")
     ftp.login(user,passw)
 except ConnectionRefusedError as e:
     print("Connection error does not exist")
