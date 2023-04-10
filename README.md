@@ -1,5 +1,7 @@
-# Automatically Send Files with FTP
- This project is for when you want to keep your files or folders on the server updated with FTP protocol, it sends the files from your local machine to the server (be it file server or web server), it makes the updates automatically as soon as you save the file on your local machine.
+# Send files automatically with FTP (Thought)
+ This project is a basic idealization of something I consider necessary for when you want to keep your files or folders updated on a server using the FTP protocol.
 
-This project uses the python ftplib library:
+How it works: When saving a file or modifying a folder, it automatically sends the change from where the script is being executed to a configured FTP server.
+
+This project uses the ftplib python library:
 https://github.com/python/cpython/blob/master/Lib/ftplib.py
