@@ -3,39 +3,66 @@ import os
 import datetime
 #from getpass import getpass
 
+#Array creation to save data
+format_date="%b %d %Y %H:%M:%S"
+date=[]
+date.insert(0,datetime.date.today().strftime(format_date))
+
 #Check and send
-def Files(ftp, path):
-    if os.path.isfile(path):
+def File(ftp, path):
         print("Send file:",path)
         name=os.path.basename(path)
         ftp.storbinary('STOR ' + name, open(path,'rb'))
-    elif os.path.isdir(path):
-        print("Send Folder:",path)
-        name=os.path.dirname(path)
-        folder_path=path.replace(name,"")
-        try:
-            ftp.mkd(folder_path)
-            ftp.cwd(folder_path)
-            for name in list_files_folder(path):
-                Files(ftp, name)
-            ftp.cwd("..")
-            print("Ok")
-        except error_perm as e:
-            if not e.args[0].startswith('550'): 
-                raise Exception("Erro Server Folder")
+
+def Dir(ftp,path):
+    print("Send Folder:",path)
+    name=os.path.dirname(path)
+    folder_path=path.replace(name+"\\","")
+    try:
+        ftp.mkd(folder_path)
+    except error_perm as e:
+        if not e.args[0].startswith('550'): 
+            raise Exception("Erro Server Folder")
+    ftp.cwd(folder_path)
+    print("Ok")
+
+def Dir_close(ftp):
+        ftp.cwd("..")
+        print("Close")
             
 def list_files_folder(dir):
     res=[]
     for file_path in os.listdir(dir):
         res.append(os.path.join(dir, file_path))
     return res
-        
+
+def verify_file(file):
+    info=os.stat(file)
+    mod=datetime.datetime.fromtimestamp(info.st_mtime)
+    time_mod=mod.strftime(format_date)
+    if date[0]<time_mod:
+        date.insert(0,time_mod)
+        print("Updated File:\n")
+        File(ftp,file)
+        print("Updated:",file)
+
+def verify_dir(dir,ignore):
+    for file in list_files_folder(dir):
+        if not any(argument in file for argument in ignore):
+            if os.path.isfile(file):
+                verify_file(file)
+            elif os.path.isdir(file):
+                Dir(ftp,file) 
+                verify_dir(file,ignore)
+                Dir_close(ftp)
+
 #Get (File / Folder)
 files=input("Folder or File Location:")
 
 #FTP server Login
 try:
-    ftp=FTP(input("What server:"))
+    server=input("What server:")
+    ftp=FTP(server)
     user=input("User:")
     #passw=getpass('password:')
     passw=input("What Password:")
@@ -56,40 +83,20 @@ ftp.dir()
 print()
 
 # #Entry in folder or creation
-folder=input("MKD(New Folder)\nWhat Folder:")
-if folder.__contains__('MKD')or folder.__contains__('mkd'):
+folder=input("MKD (Create new Folder)\nWhat Folder:")
+if folder.__contains__('MKD') or folder.__contains__('mkd'):
     folder=input("Folder Name:")
     ftp.mkd(folder)
 ftp.cwd(folder)
 
-# #Array creation to save data
-date=[]
-date.insert(0,"")
-
-# Colocar apra mandar apenas uns arquivos escolhidos
+# Colocar para mandar apenas uns arquivos escolhidos
+# Mandar apenas os arquivos ou pastas que foram modificados
 #Repeat To check (File / Folder) to send to server
-while True:    
-
+while True:
 #File
-    if os.path.isfile(files)==True:        
-        info=os.stat(files)
-        mod=datetime.datetime.fromtimestamp(info.st_mtime)
-        time_mod=mod.strftime("%b %d %Y %H:%M:%S")
-        if date[0]<time_mod:
-            date.insert(0,time_mod)
-            print("Updated File:\n")
-            Files(ftp,files)
-            print("Updated:",files)
-
-#Mandar apenas os arquivos ou pastas que foram modificados
+    if os.path.isfile(files):      
+        verify_file(files)
 #Folder
-    elif os.path.isdir(files)==True:
-        for file in list_files_folder(files):
-            info=os.stat(file)
-            mod=datetime.datetime.fromtimestamp(info.st_atime)
-            time_mod=mod.strftime("%b %d %Y %H:%M:%S")
-            if date[0]<time_mod:
-                print("Updated Folder:\n")
-                date.insert(0,time_mod)
-                Files(ftp,file)
-                print("Updated:",file)
+    elif os.path.isdir(files):      
+        ignore_folders=[".git"]
+        verify_dir(files,ignore_folders)
