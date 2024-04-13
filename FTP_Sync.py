@@ -40,20 +40,25 @@ def verify_file(file):
     info=os.stat(file)
     mod=datetime.datetime.fromtimestamp(info.st_mtime)
     time_mod=mod.strftime(format_date)
-    if date[0]<time_mod:
+    # print(time_mod,date[0]);
+    if date[0]<=time_mod:
         date.insert(0,time_mod)
         print("Updated File:\n")
         File(ftp,file)
         print("Updated:",file)
 
 def verify_dir(dir,ignore):
-    for file in list_files_folder(dir):
-        if not any(argument in file for argument in ignore):
-            if os.path.isfile(file):
-                verify_file(file)
-            elif os.path.isdir(file):
-                Dir(ftp,file) 
-                verify_dir(file,ignore)
+    # info=os.stat(dir)
+    # mod=datetime.datetime.fromtimestamp(info.st_mtime)
+    # time_mod=mod.strftime(format_date)
+    # date[0]<time_mod and 
+    for path in list_files_folder(dir):
+        if not any(argument in path for argument in ignore):
+            if os.path.isfile(path):
+                verify_file(path)
+            elif os.path.isdir(path):
+                Dir(ftp,path)
+                verify_dir(path,ignore)
                 Dir_close(ftp)
 
 #Get (File / Folder)
